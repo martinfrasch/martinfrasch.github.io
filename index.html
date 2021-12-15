@@ -1,35 +1,60 @@
-# Predicting maternal morbidity considering the impact of ethnicity and socioeconomic status: focus on rehospitalization and postpartum depression.
 
-You can obtain the **nuMoM2b** dataset [here](https://dash.nichd.nih.gov).
+<!DOCTYPE html>
+<html>
 
-**Introduction**
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome file</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
 
-The advent of machine learning (ML) in medicine has opened opportunities for harnessing the power of ML to predict patient outcomes based on various data contained in the electronic medical records (EMRs) such as patient’s demographics, basic health and physiological characteristics.(Rajkomar et al. 2018; Lin et al. 2020) The exciting opportunity for health research is that taken by themselves such singular features do not tell a clearly predictive story, but combined in a ML modeling framework such so-called “weak learners” have the power to amount to highly predictive models of health outcomes.
+<body class="stackedit">
+  <div class="stackedit__left">
+    <div class="stackedit__toc">
+      
+<ul>
+<li><a href="#vagus-hrv-code">Vagus HRV code</a></li>
+<li><a href="#batch-computation-of-hrv-metrics-using-neurokit-api">Batch computation of HRV metrics using NeuroKit API</a></li>
+<li><a href="#predicting-maternal-morbidity-considering-the-impact-of-ethnicity-and-socioeconomic-status-focus-on-rehospitalization-and-postpartum-depression.">Predicting maternal morbidity considering the impact of ethnicity and socioeconomic status: focus on rehospitalization and postpartum depression.</a></li>
+</ul>
 
-nuMoM2b is an information-rich dataset that allowed me to tackle two important aspects of the maternal health outcomes:
+    </div>
+  </div>
+  <div class="stackedit__right">
+    <div class="stackedit__html">
+      <h1 id="vagus-hrv-code">Vagus HRV code</h1>
+<p><a href="https://github.com/martinfrasch/vagus_HRV_code">Supplementary data</a> for the manuscript “Decoding vagal contributions to fetal heart rate variability” by C.L. Herry et al.</p>
+<h1 id="batch-computation-of-hrv-metrics-using-neurokit-api">Batch computation of HRV metrics using NeuroKit API</h1>
+<p><a href="https://github.com/martinfrasch/NeuroKit/blob/master/HRV_batch_mode_v3.1_GitHub%20_FINAL.ipynb">Navigate</a> to the Jupyter notebook</p>
+<h1 id="predicting-maternal-morbidity-considering-the-impact-of-ethnicity-and-socioeconomic-status-focus-on-rehospitalization-and-postpartum-depression.">Predicting maternal morbidity considering the impact of ethnicity and socioeconomic status: focus on rehospitalization and postpartum depression.</h1>
+<p>You can obtain the <strong>nuMoM2b</strong> dataset <a href="https://dash.nichd.nih.gov">here</a>.</p>
+<p><strong>Introduction</strong></p>
+<p>The advent of machine learning (ML) in medicine has opened opportunities for harnessing the power of ML to predict patient outcomes based on various data contained in the electronic medical records (EMRs) such as patient’s demographics, basic health and physiological characteristics.(Rajkomar et al. 2018; Lin et al. 2020) The exciting opportunity for health research is that taken by themselves such singular features do not tell a clearly predictive story, but combined in a ML modeling framework such so-called “weak learners” have the power to amount to highly predictive models of health outcomes.</p>
+<p>nuMoM2b is an information-rich dataset that allowed me to tackle two important aspects of the maternal health outcomes:</p>
+<ol>
+<li>Hypothesis 1: Demographic and socioeconomic characteristics influence the outcomes of being readmitted to the hospital (rehospitalization).</li>
+<li>Hypothesis 2: Demographic and socioeconomic characteristics along with psychiatric history influence the outcome of experiencing postpartum depression.</li>
+</ol>
+<p><strong>Methods</strong></p>
+<p>I set up a coding notebook environment in R Studio, a freely available open source environment, that efficiently ingests the nuMoM2b dataset as the input. The choice of software is optimized to run on regular desktop computers, thus requiring no special computing resources. This should help with wide utilization of the presented data science approach to this dataset to test other hypotheses.</p>
+<p>All steps in the notebook can be easily reproduced, step by step, on the existing data or the ML models can be updated/retrained as the new data come in.<br>
+I summarize the key findings in the notebook as they are generated and in the manuscript (arXiv TBA).</p>
+<p>I hope this approach will empower other researchers, even with limited or no data science background, to reproduce and enhance the presented results and approaches and generate further insights into which factors modify the maternal morbidity.</p>
+<p><strong>Results</strong></p>
+<p>The easiest way to view the results is by opening open the following HTML files:</p>
+<ol>
+<li><a href="maternal_nu_data.nb.html">Hypothesis 1</a></li>
+<li><a href="maternal_depression_data.nb.html">Hypothesis 2</a></li>
+</ol>
+<p>I supplied the salient output graphics as PNG or PDF files along with the underlying code as Rmd files. Those can be executed in R to validate and develop this further.</p>
+<p><strong>References</strong><br>
+Lin, Wei-Chun, Jimmy S. Chen, Michael F. Chiang, and Michelle R. Hribar. 2020. “Applications of Artificial Intelligence to Electronic Health Record Data in Ophthalmology.” Translational Vision Science &amp; Technology 9 (2): 13.<br>
+Rajkomar, Alvin, Eyal Oren, Kai Chen, Andrew M. Dai, Nissan Hajaj, Michaela Hardt, Peter J. Liu, et al. 2018. “Scalable and Accurate Deep Learning with Electronic Health Records.” NPJ Digital Medicine 1 (May): 18.</p>
+<p><strong>Credit</strong> for the  for <em>decision tree viz code</em> goes to <a href="http://rstudio-pubs-static.s3.amazonaws.com/463653_b50579f05ae246a9bfa4251ef9aae26b.html">Gregory Kanevsky</a></p>
 
-1) Hypothesis 1: Demographic and socioeconomic characteristics influence the outcomes of being readmitted to the hospital (rehospitalization). 
-2) Hypothesis 2: Demographic and socioeconomic characteristics along with psychiatric history influence the outcome of experiencing postpartum depression.
+    </div>
+  </div>
+</body>
 
-**Methods**
-
-I set up a coding notebook environment in R Studio, a freely available open source environment, that efficiently ingests the nuMoM2b dataset as the input. The choice of software is optimized to run on regular desktop computers, thus requiring no special computing resources. This should help with wide utilization of the presented data science approach to this dataset to test other hypotheses.  
-
-All steps in the notebook can be easily reproduced, step by step, on the existing data or the ML models can be updated/retrained as the new data come in. 
-I summarize the key findings in the notebook as they are generated and in the manuscript (arXiv TBA).
-
-I hope this approach will empower other researchers, even with limited or no data science background, to reproduce and enhance the presented results and approaches and generate further insights into which factors modify the maternal morbidity.
-
-**Results**
-
-The easiest way to view the results is by opening open the following HTML files: 
-1) [Hypothesis 1](maternal_nu_data.nb.html)
-2) [Hypothesis 2](maternal_depression_data.nb.html)
-
-I supplied the salient output graphics as PNG or PDF files along with the underlying code as Rmd files. Those can be executed in R to validate and develop this further.
-
-**References**
-Lin, Wei-Chun, Jimmy S. Chen, Michael F. Chiang, and Michelle R. Hribar. 2020. “Applications of Artificial Intelligence to Electronic Health Record Data in Ophthalmology.” Translational Vision Science & Technology 9 (2): 13.
-Rajkomar, Alvin, Eyal Oren, Kai Chen, Andrew M. Dai, Nissan Hajaj, Michaela Hardt, Peter J. Liu, et al. 2018. “Scalable and Accurate Deep Learning with Electronic Health Records.” NPJ Digital Medicine 1 (May): 18.
-
-**Credit** for the  for *decision tree viz code* goes to [Gregory Kanevsky](http://rstudio-pubs-static.s3.amazonaws.com/463653_b50579f05ae246a9bfa4251ef9aae26b.html)
+</html>
