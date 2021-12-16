@@ -1,0 +1,684 @@
+---
+title: "NICHD Decoding Maternal Morbidity Data Challenge: prediction of rehospitalization"
+author: 
+  name: "Dr. Martin G. Frasch"
+  affiliation: "Health Stream Analytics"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    theme: paper
+    number_sections: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# be careful with cache setting: set to FALSE if you want to rerun all code before knitting
+
+# syntax to time execution of a cell in R | added as time_it snippet | invoke with shift+TAB
+ptm<-proc.time()
+# insert my code
+proc.time()-ptm
+```
+
+```{r, include=FALSE}
+local({r <- getOption("repos"); r["CRAN"] <- "http://cran.us.r-project.org"; options(repos = r)})
+if (!"R.utils" %in% rownames(installed.packages())) install.packages("R.utils")
+setwd("/home/bizon/Documents/mu2b/")
+options(echo=TRUE)
+TEST_ROOT_DIR <- ".."
+```
+
+# Read the data
+
+```{r load general packages for handling big data}
+library(tidyverse)
+library(data.table)
+library(dplyr)
+library(readxl)
+library(caret)
+library(magrittr)
+```
+
+```{r read the raw data, cache=TRUE}
+ptm<-proc.time()
+f<-"/home/bizon/Documents/nuMoM2b_Dataset_NICHD_Data_Challenge.csv"
+mu_data_df <- fread(f)
+proc.time()-ptm
+```
+
+## Set up easy in-the-app viewing of the accompanying coding and info spreadsheets
+
+I want to be able to look up quickly and select the correct predictor and response variables directly inside this R Studio environment. Eventually, this could be extended to allow variable selection to pass them on to "predictors" and "response" variables used in the various machine learning (ML) models below.
+
+For now, we are simply manually selecting the clinically/medically meaningful predictors/response variables, check them for artifacts, clean up those artifacts as appropriate and proceed to ML modeling to test our hypotheses.
+
+```{r read the explanatory files to handle everything in one place, cache=TRUE}
+
+ptm<-proc.time()
+f1_info<-"/home/bizon/Documents/mu2b/nuMoM2b_Dataset_Information.xlsx"
+f2_code<-"/home/bizon/Documents/mu2b/nuMoM2b_Codebook_NICHD_Data_Challenge.xlsx"
+mu_info_df <- read_excel(f1_info)
+mu_code_df <- read_excel(f2_code)
+proc.time()-ptm
+```
+
+Now that we loaded our Information and Code spreadsheets, we can use DT library to view and search in them easily.
+
+*Note: it is best to open the output tables in a new window.*
+
+```{r view code and info tables, cache=TRUE}
+library(DT)
+datatable(mu_code_df, filter = 'top', options = list(pageLength = 10, autoWidth = TRUE))
+datatable(mu_info_df, filter = 'top', options = list(pageLength = 10, autoWidth = TRUE))
+```
+
+# Preprocessing
+
+[[I need to remove NA values from **CMAJ01.**]{.ul}]{.smallcaps}
+
+*Note: this step can be repeated as needed in the preprocessing pipeline for the desired response variable*
+
+```{r remove NA rows for CMAJ01, cache=TRUE}
+# select "CMAJ01" | if NA, remove that row 
+
+# remove all rows where the column CMAJ01 has NA
+clean_CMAJ01_df<-mu_data_df[!is.na(mu_data_df$CMAJ01), ] 
+
+# The above won't work on an h2o object, but works on a regular dataframe, so reading as df first and then, once preprocessing is done, moving on to h2o
+```
+
+```{r preprocessing_results_view_with_dplyr, echo=TRUE, paged.print=TRUE, cache=TRUE}
+#View(clean_CMAJ01_df$CMAJ01) #super fast Excel-like view of the data
+
+glimpse(clean_CMAJ01_df$CMAJ01)
+count(clean_CMAJ01_df, CMAJ01)
+nrow(clean_CMAJ01_df[mu_data_df$CMAJ01])
+sum(is.na(clean_CMAJ01_df$CMAJ01))
+```
+
+Confirming that we removed all NAs for CMAJ01:
+
+    glimpse: int [1:8774] 2 2 2 2 2 2 2 2 2 2 ...
+    count: [1] 9289
+    sum is.na: [1] 0
+
++-----------------------------------------------------------------------------------------------------+
+| Raw data cleaned with regard to NA values in CMAJ01, my response variable. Using this for modeling. |
++-----------------------------------------------------------------------------------------------------+
+
++===============================================================================+ +-------------------------------------------------------------------------------+
+
++--------+--------+
+| CMAJ01 | n      |
+|        |        |
+| \<int> | \<int> |
++=======:+=======:+
+| 1      | 154    |
++--------+--------+
+| 2      | 8620   |
++--------+--------+
+
+# Load h2o for Machine Learning
+
+```{r load h2o}
+library(h2o)
+h2o.init()
+```
+
+Reading in the preprocessed dataset.
+
+```{r read_into_h2o, cache=TRUE}
+ptm<-proc.time()
+mu_data <- as.h2o(clean_CMAJ01_df)
+proc.time()-ptm
+
+```
+
+## Set predictors and response; set response as a factor
+
+-   maternal outcome: mortality (CMAE14): don't have enough data to build a binary outcome prediction model \| skip;
+
+-   First, exploring the impact of demographics on readmission rate (CMAJ01) as a measure of morbidity:
+
+```{r set_predictors_response, cache=TRUE}
+
+mu_data[,"CMAJ01"]<-as.factor(mu_data[,"CMAJ01"]) 
+
+# predictors "participant", "demographics" dataset (column A) includes the relevant features
+# concludes the variables from "demographics" dataset; model as is and test later by adding participant features from the "CMA" set
+
+predictors<-c("CRace",
+              "Race",
+              "eRace",
+              "eHispanic",
+              "BMI",
+              "BMI_Cat",
+              "Education",
+              "GravCat",
+              "SmokeCat1",
+              "SmokeCat2",
+              "SmokeCat3",
+              "Ins_Govt",
+              "Ins_Mil",
+              "Ins_Comm",
+              "Ins_Pers",
+              "Ins_Othr",
+              "PctFedPoverty",
+              "poverty"                        
+              ) #makes a list of predicting variables
+
+response<-"CMAJ01"
+```
+
+```{r view the dataset, cache=TRUE}
+mu_data
+```
+
+```{r number of rows for CMAJ01, cache=TRUE}
+h2o.nrow(mu_data["CMAJ01"])
+h2o.group_by(data=mu_data, by="CMAJ01", nrow("CMAJ01"))
+```
+
+In the raw dataset, we had 8786 cases of "CMAE14" are coded as 2 = not died, there are no cases to study this outcome.
+
+In the raw dataset, we had for "CMAJ01", we have a slightly better situation: 1, yes = 154 cases of readmission, 2, No, 8620 cases.
+
+Needed to handle NaN and 4th row. This is best done on the R data frame which is what we did above in Preprocessing step.
+
+```{r}
+head(mu_data, cache=TRUE)
+```
+
+```{r h2o_aggregator_estimator}
+# agg <- h2o.aggregator(training_frame = mu_data,
+#                       target_num_exemplars = 9000,
+#                       rel_tol_num_exemplars = 0.5,
+#                       categorical_encoding = "Eigen")
+# new_df<-h2o.aggregated_frame(agg)
+# new_df
+```
+
+Aggregator destroys this dataframe. Skip this step.
+
+# Train the DRF model
+
+(first, let's do a "quick&dirty" way = no hold-out dataset to get some sense of the data from ML standpoint)
+
+```{r first_drf_model, cache=TRUE}
+
+test_mother_mu_data_RFmodel<-h2o.randomForest(x=predictors,y=response,training_frame = mu_data, nfolds=10,seed = 1234)
+```
+
+## Show the model's performance
+
+    AUCpr:  0.9851791 for prediction of hospital readmission from demographics
+
+```{r model performance, echo=TRUE, message=TRUE, warning=FALSE, cache=TRUE}
+
+test_mother_mu_data_RFmodel
+```
+
+That was a quick test.
+
+Now I need to create a hold-out dataset first; repeat the above then as test:validation.
+
+See [here](https://docs.h2o.ai/h2o/latest-stable/h2o-r/docs/reference/index.html), [here](https://docs.h2o.ai/h2o/latest-stable/h2o-r/docs/reference/h2o.splitFrame.html) and [here](http://h2o-release.s3.amazonaws.com/h2o/master/3552/docs-website/h2o-docs/datamunge/splitdatasets.html)
+
+## Split the data 0.8 for training:validation
+
+```{r data_split, cache=TRUE}
+mother_mu_data_split <- h2o.splitFrame(mu_data, ratios=0.8, seed = 1)
+```
+
+```{r assign_train_validation, cache=TRUE}
+train=mother_mu_data_split[[1]]
+valid=mother_mu_data_split[[2]]
+```
+
+## Train the DRF model on the training dataset = 0.8
+
+```{r train_DRF_on_test_dataset, cache=TRUE}
+ptm<-proc.time()
+mother_mu_data_RFmodel<-h2o.randomForest(x=predictors,y=response,training_frame = train, nfolds=10,seed = 1234)
+proc.time()-ptm
+
+```
+
+## Predict using the DRF model on the testing dataset =0.2
+
+> Yields very good AUCpr=0.984
+
+```{r performance of the _real_ DRF model, message=TRUE, paged.print=TRUE, cache=TRUE}
+ptm<-proc.time()
+
+mother_mu_data_predict<-h2o.predict(object=mother_mu_data_RFmodel, newdata=valid)
+
+mother_mu_data_RFmodel
+
+proc.time()-ptm
+```
+
+### AUROCpr for predicting re-hospitalization based on patient demographics alone
+
+```{r plot AUROCpr, echo=TRUE, cache=TRUE}
+
+mod=mother_mu_data_RFmodel
+
+perf <- h2o.performance(mod,valid)
+
+metrics <- as.data.frame(h2o.metric(perf))
+
+metrics %>%
+  ggplot(aes(recall,precision)) + 
+  geom_line() +
+  theme_minimal()
+
+```
+
+### Explain the model
+
+```{r model_performance_on_test_dataset, cache=TRUE}
+
+ptm<-proc.time()
+
+# toggle progress bar if desired:
+# h2o.show_progress() 
+
+exp <-h2o.explain(object=mother_mu_data_RFmodel, newdata=valid)
+print(exp)
+
+proc.time()-ptm
+```
+
+### Statistics summary
+
+```{r function to see the results, cache=TRUE}
+
+results_df <- function(h2o_model) {
+  h2o_model@model$cross_validation_metrics_summary %>% 
+    as.data.frame() %>% 
+    select(-mean, -sd) %>% 
+    t() %>% 
+    as.data.frame() %>% 
+    mutate_all(as.character) %>% 
+    mutate_all(as.numeric) -> k
+  
+  k %>% 
+    select(Accuracy = accuracy,
+           prAUC = pr_auc,
+           Precision = precision,
+           Specificity = specificity,
+           Recall = recall,
+           Logloss = logloss) %>% 
+  return()
+}
+```
+
+```{r producing the statistics summary, cache=TRUE}
+
+# Using function
+results_df(mod) -> outcome
+
+# Outcome 
+outcome %>% 
+  gather(Metrics, Values) %>% 
+  ggplot(aes(Metrics, Values, fill = Metrics, color = Metrics)) +
+  geom_boxplot(alpha = 0.3, show.legend = FALSE) + 
+  facet_wrap(~ Metrics, scales = "free") + 
+  labs(title = "Performance of our ML model using H2o package ",
+       caption = "Data Source: NICHD Decoding Maternal Morbidity Data Challenge\nCreated by Martin Frasch (further credit to https://bit.ly/3BpPqcb)") +
+  theme_minimal()
+```
+
+```{r Tabular statistics summary, cache=TRUE}
+
+# Statistics summary
+outcome %>% 
+  gather(Metrics, Values) %>% 
+  group_by(Metrics) %>% 
+  summarise_each(funs(mean, median, min, max, sd, n())) %>% 
+  mutate_if(is.numeric, function(x) {round(100*x, 2)}) %>%
+  knitr::kable(col.names = c("Criterion", "Mean", "Median", "Min", "Max", "SD", "N"))
+
+```
+
+## Building an interpretable decision tree model
+
+> Using the `balance_classes` term available in this model allows to better control for the unbalanced data we are dealing with here, because the re-hospitalization rate is \~2%
+
+[`Source`](http://rstudio-pubs-static.s3.amazonaws.com/463653_b50579f05ae246a9bfa4251ef9aae26b.html#plotting-decision-tree-with-data.table)
+
+```{r decision_tree_model, cache=TRUE}
+
+maternal_dt_model<-h2o.gbm(x=predictors,y=response,training_frame = train, validation_frame = valid, balance_classes = TRUE, seed = 1234, nfolds=10)
+
+# GBM hyperparamters
+gbm_params = list(max_depth = seq(2, 10))
+
+# Train and validate a cartesian grid of GBMs
+gbm_grid = h2o.grid("gbm", x = predictors, y = response,
+                    grid_id = "gbm_grid_1tree8",
+                    training_frame = train,
+                    validation_frame = valid,
+                    balance_classes = TRUE,
+                    ntrees = 1, min_rows = 1, sample_rate = 1, col_sample_rate = 1,
+                    learn_rate = .01, seed = 1234, 
+                    hyper_params = gbm_params)
+
+gbm_gridperf = h2o.getGrid(grid_id = "gbm_grid_1tree8",
+                           sort_by = "auc",
+                           decreasing = TRUE)
+
+```
+
+```{r GBM_performance, cache=TRUE}
+
+# what is the performance of this GBM?
+maternal_dt_model
+```
+
+We obtain prAUC=0.98
+
+```{r GBM_grid_performance, cache=TRUE}
+gbm_gridperf
+```
+
+Inflection point is at max_depth=8
+
+```{r train GBM, cache=TRUE}
+
+maternal_1_tree = h2o.gbm(x = predictors, y = response, 
+                        training_frame = train, balance_classes = TRUE,
+                        ntrees = 1, min_rows = 1, sample_rate = 1, col_sample_rate = 1,
+                        max_depth = 8,
+                  # use early stopping once the validation AUC doesn't improve by at least 0.01%
+                  # for 5 consecutive scoring events
+                        stopping_rounds = 3, stopping_tolerance = 0.01, 
+                        stopping_metric = "AUC", 
+                        seed = 1)
+maternal_1_tree
+
+
+```
+
+    AUCPR:  0.882762
+
+```{r maternal_tree, cache=TRUE}
+maternal_Tree = h2o.getModelTree(model = maternal_1_tree, tree_number = 1)
+```
+
+```{r function_viz_tree, cache=TRUE}
+
+# Visualizing H2O Trees
+
+library(data.tree)
+
+createDataTree <- function(h2oTree) {
+  
+  h2oTreeRoot = h2oTree@root_node
+  
+  dataTree = Node$new(h2oTreeRoot@split_feature)
+  dataTree$type = 'split'
+  
+  addChildren(dataTree, h2oTreeRoot)
+  
+  return(dataTree)
+}
+
+addChildren <- function(dtree, node) {
+  
+  if(class(node)[1] != 'H2OSplitNode') return(TRUE)
+  
+  feature = node@split_feature
+  id = node@id
+  na_direction = node@na_direction
+  
+  if(is.na(node@threshold)) {
+    leftEdgeLabel = printValues(node@left_levels, na_direction=='LEFT', 4)
+    rightEdgeLabel = printValues(node@right_levels, na_direction=='RIGHT', 4)
+  }else {
+    leftEdgeLabel = paste("<", node@threshold, ifelse(na_direction=='LEFT',',NA',''))
+    rightEdgeLabel = paste(">=", node@threshold, ifelse(na_direction=='RIGHT',',NA',''))
+  }
+  
+  left_node = node@left_child
+  right_node = node@right_child
+  
+  if(class(left_node)[[1]] == 'H2OLeafNode')
+    leftLabel = paste("prediction:", left_node@prediction)
+  else
+    leftLabel = left_node@split_feature
+  
+  if(class(right_node)[[1]] == 'H2OLeafNode')
+    rightLabel = paste("prediction:", right_node@prediction)
+  else
+    rightLabel = right_node@split_feature
+  
+  if(leftLabel == rightLabel) {
+    leftLabel = paste(leftLabel, "(L)")
+    rightLabel = paste(rightLabel, "(R)")
+  }
+  
+  dtreeLeft = dtree$AddChild(leftLabel)
+  dtreeLeft$edgeLabel = leftEdgeLabel
+  dtreeLeft$type = ifelse(class(left_node)[1] == 'H2OSplitNode', 'split', 'leaf')
+  
+  dtreeRight = dtree$AddChild(rightLabel)
+  dtreeRight$edgeLabel = rightEdgeLabel
+  dtreeRight$type = ifelse(class(right_node)[1] == 'H2OSplitNode', 'split', 'leaf')
+  
+  addChildren(dtreeLeft, left_node)
+  addChildren(dtreeRight, right_node)
+  
+  return(FALSE)
+}
+
+printValues <- function(values, is_na_direction, n=4) {
+  l = length(values)
+  
+  if(l == 0)
+    value_string = ifelse(is_na_direction, "NA", "")
+  else
+    value_string = paste0(paste0(values[1:min(n,l)], collapse = ', '),
+                          ifelse(l > n, ",...", ""),
+                          ifelse(is_na_direction, ", NA", ""))
+  
+  return(value_string)
+}
+
+
+```
+
+This decision tree, also supplied as PDF, is meant to help build intuition about how the model.
+
+```{r decision_tree_h2o, cache=TRUE}
+
+library(DiagrammeR)
+
+# customized DT for our H2O model
+
+maternal_mu2DataTree = createDataTree(maternal_Tree)
+
+GetEdgeLabel <- function(node) {return (node$edgeLabel)}
+GetNodeShape <- function(node) {switch(node$type, 
+                                       split = "diamond", leaf = "oval")}
+GetFontName <- function(node) {switch(node$type, 
+                                      split = 'Palatino-bold', 
+                                      leaf = 'Palatino')}
+SetEdgeStyle(maternal_mu2DataTree, fontname = 'Palatino-italic', 
+             label = GetEdgeLabel, labelfloat = TRUE,
+             fontsize = "26", fontcolor='royalblue4')
+SetNodeStyle(maternal_mu2DataTree, fontname = GetFontName, shape = GetNodeShape, 
+             fontsize = "26", fontcolor='royalblue4',
+             height="0.75", width="1")
+
+SetGraphStyle(maternal_mu2DataTree, rankdir = "LR", dpi=70.)
+
+plot(maternal_mu2DataTree, output = "graph")
+
+```
+
+```{r generate h2o explanation of the DT model, cache=TRUE}
+ptm<-proc.time()
+
+exp_dt<-h2o.explain(maternal_dt_model,valid)
+
+proc.time()-ptm
+```
+
+```{r show the explanation, cache=TRUE}
+
+exp_dt
+```
+
+## Using **Naïve Bayes Classifier**
+
+```{r Naïve Bayes Classifier, cache=TRUE}
+
+# Build and train the model:
+mo2b_nb <- h2o.naiveBayes(x = predictors,
+                          y = response,
+                          training_frame = train,
+                          laplace = 0,
+                          nfolds = 10,
+                          seed = 1234)
+
+# Eval performance:
+perf <- h2o.performance(mo2b_nb)
+
+# Generate the predictions on a test set (if necessary):
+pred <- h2o.predict(mo2b_nb, newdata = valid)
+```
+
+```{r bayes_performance, cache=TRUE}
+perf
+```
+
+    AUC:  0.6178245
+    AUCPR:  0.9877748
+
+```{r explain naive bayes model, cache=TRUE}
+
+# best viewed in a new window or see, please, the PDF included with the submission
+exp_nb <- h2o.explain(mo2b_nb,valid)
+```
+
+Note the highly variable partial importance of the different socio-demographic characteristics
+
+```{r viz_nb_performance, cache=TRUE}
+
+exp_nb
+```
+
+## Extending the ML toolbox: Using h2o AutoML mode to find an objectively best performing model
+
+Compare [here](http://h2o-release.s3.amazonaws.com/h2o/rel-yates/1/docs-website/h2o-docs/automl.html#code-examples). The findings are to be interpreted with caution at this stage. Once we obtain a larger external dataset for validation, with a more balanced case distribution, this will become more useful and allow building an inference engine that could be deployed for use. I am presenting this code therefore as a reference for future work.
+
+Nevertheless, it is evident that an optimization even at this stage results in a marked (\~60%) improvement of classification prediction performance, up to AUC 76%. This result can vary depending on the run.
+
+Note please, this code runs for \~2 hours on a well-equipped deep learning workstation.
+
+### Train in AutoML mode
+
+```{r auto_ml, cache=TRUE}
+
+ptm<-proc.time()
+
+maternal_aml <- h2o.automl(x=predictors,y=response,training_frame = train, max_models = 20, seed = 1)
+
+maternal_lb <- maternal_aml@leaderboard
+
+#print(maternal_lb, n = nrow(maternal_lb)) #Print all rows instead of default 6 rows
+
+proc.time()-ptm
+```
+
+### Validate the combined leader aml model
+
+```{r validate_aml, cache=TRUE}
+ptm<-proc.time()
+
+maternal_perf_valid <- h2o.performance(maternal_aml@leader,newdata=valid,xval=FALSE,valid=TRUE)
+
+pred <- h2o.predict(maternal_aml@leader, valid)
+```
+
+```{r aml_auc, cache=TRUE}
+h2o.auc(maternal_aml@leader)
+```
+
+```{r aml_metrics, cache=TRUE}
+# Using function
+results_df(maternal_aml@leader) -> outcome
+
+# Outcome 
+outcome %>% 
+  gather(Metrics, Values) %>% 
+  ggplot(aes(Metrics, Values, fill = Metrics, color = Metrics)) +
+  geom_boxplot(alpha = 0.3, show.legend = FALSE) + 
+  facet_wrap(~ Metrics, scales = "free") + 
+  labs(title = "Performance of the best AutoML model using H2o package ",
+       caption = "Data Source: NICHD Decoding Maternal Morbidity Data Challenge\nCreated by Martin Frasch (further credit to https://bit.ly/3BpPqcb)") +
+  theme_minimal()
+```
+
+[`Explain the model`](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/explain.html)
+
+We observe no specificity because the dataset is unbalanced such that by luck of draw (when the dataset is split 80:20) we get no true positives.
+
+```{r explain_best_model, cache=TRUE}
+ptm<-proc.time()
+exp <-h2o.explain(maternal_aml@leader, valid)
+proc.time()-ptm
+```
+
+```{r explain, cache=TRUE}
+print(exp)
+```
+
+# GPU accelerated ML solutions
+
+Test run from the [demo](https://docs.h2o.ai/h2o/latest-stable/h2o-r/docs/reference/h2o.randomForest.html) site. Details on setup [here](https://cran.r-project.org/web/packages/h2o4gpu/vignettes/getting_started.html).
+
+### Testing h2o GPU installation
+
+Requires Python h2o4gpu module. Details of installation [here](https://github.com/h2oai/h2o4gpu).
+
+-   The R library uses reticulate to point to the correct Python version (3.6)
+
+-   [Vignettes](https://github.com/h2oai/h2o4gpu/blob/master/src/interface_r/vignettes/getting_started.Rmd) \| Python [demos](https://github.com/h2oai/h2o4gpu/tree/master/examples/py/demos)
+
+```{r a relevant example of GPU-accelerated ML, cache=TRUE}
+library(h2o4gpu)
+library(reticulate)  # only needed if using a virtual Python environment or multiple Python versions
+use_python("/home/bizon/anaconda3/bin/python3.6", required = TRUE)
+#use_virtualenv("/home/bizon/h2o_ml")  # set this to the path of your venv if any is used
+
+# Setup dataset
+x <- iris[1:4]
+y <- as.integer(iris$Species) - 1
+
+# Initialize and train the classifier
+model <- h2o4gpu.random_forest_classifier() %>% fit(x, y)
+
+#  Other ML approaches are also available such as GBM, regression models, unsupervised learning
+
+# Make predictions
+predictions <- model %>% predict(x)
+```
+
+### Deploying GPU-accelerated ML on our dataset
+
+I am leaving this for future implementations. This is simply to point out the possibility to leverage GPU-equipped deep learning workstations to speed up the model building time on a dataset of this size.
+
+=> See "postpartum depression" notebook for additional models.
+
+```{r, cache=TRUE}
+sessionInfo()
+```
