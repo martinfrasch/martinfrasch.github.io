@@ -1,69 +1,121 @@
-
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome file</title>
-  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FraschLab Projects</title>
+    <!-- Google Fonts for a clean, modern typeface -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to complement Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* Add a little extra spacing for section headers to account for the fixed nav bar */
+        section {
+            padding-top: 6rem;
+            margin-top: -4rem;
+        }
+    </style>
 </head>
+<body class="bg-gray-50 text-gray-800">
 
-<body class="stackedit">
-  <div class="stackedit__left">
-    <div class="stackedit__toc">
-      
-<ul>
-<li><a href="#fraschlab-github-pages">FraschLab Github pages</a></li>
-<li><a href="#vagus-hrv-code">Vagus HRV code</a></li>
-<li><a href="#batch-computation-of-hrv-metrics-using-neurokit-api">Batch computation of HRV metrics using NeuroKit API</a></li>
-<li><a href="#predicting-maternal-morbidity-considering-the-impact-of-ethnicity-and-socioeconomic-status-focus-on-rehospitalization-and-postpartum-depression.">Predicting maternal morbidity considering the impact of ethnicity and socioeconomic status: focus on rehospitalization and postpartum depression.</a></li>
-<li><a href="#MethodsX%20R1%20HRV%20pipeline%20v4.1.html">Updated HRV pipeline with Apple Watch sleep data analysis as an example</a></li>
-<li><a href="#sample%20ChatGPT%20conversation%20to%20build%20ML%20models%20in%20Python%20and%20R.html">Sample ChatGPT conversation to generate ML code in Python and R</a></li>
-</ul>
+    <!-- Main Container -->
+    <div class="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
 
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight">FraschLab Projects & Resources</h1>
+            <p class="mt-4 text-lg text-gray-600">
+                Official Lab Website: 
+                <a href="https://fraschlab.org" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors">
+                    fraschlab.org
+                </a>
+            </p>
+        </header>
+
+        <!-- Navigation Menu -->
+        <nav class="bg-white/70 backdrop-blur-lg p-4 rounded-xl shadow-md sticky top-4 z-10 mb-12">
+            <ul class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
+                <li><a href="#vagus-hrv" class="font-medium text-gray-600 hover:text-blue-600 transition-colors">Vagus HRV Code</a></li>
+                <li><a href="#batch-hrv" class="font-medium text-gray-600 hover:text-blue-600 transition-colors">Batch HRV</a></li>
+                <li><a href="#maternal-morbidity" class="font-medium text-gray-600 hover:text-blue-600 transition-colors">Maternal Morbidity</a></li>
+                <li><a href="#hrv-pipeline" class="font-medium text-gray-600 hover:text-blue-600 transition-colors">Updated HRV Pipeline</a></li>
+                <li><a href="#chatgpt-demo" class="font-medium text-gray-600 hover:text-blue-600 transition-colors">ChatGPT Demo</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Sections -->
+        <main class="space-y-16">
+
+            <!-- Vagus HRV Code Section -->
+            <section id="vagus-hrv" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-900 border-b pb-3 mb-4">Vagus HRV Code</h2>
+                <p>
+                    <a href="https://github.com/martinfrasch/vagus_HRV_code" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Supplementary data</a> for the manuscript “Decoding vagal contributions to fetal heart rate variability” by C.L. Herry et al.
+                </p>
+            </section>
+
+            <!-- Batch Computation Section -->
+            <section id="batch-hrv" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-900 border-b pb-3 mb-4">Batch Computation of HRV Metrics using NeuroKit API</h2>
+                <p>
+                    <a href="https://github.com/martinfrasch/NeuroKit/blob/master/HRV_batch_mode_v3.1_GitHub%20_FINAL.ipynb" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Navigate to the Jupyter notebook</a> to see a demonstration of batch processing for HRV metrics.
+                </p>
+            </section>
+
+            <!-- Maternal Morbidity Section -->
+            <section id="maternal-morbidity" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-900 border-b pb-3 mb-4">Predicting Maternal Morbidity</h2>
+                <p class="mb-6">A project considering the impact of ethnicity and socioeconomic status on rehospitalization and postpartum depression. You can obtain the <strong>nuMoM2b</strong> dataset <a href="https://dash.nichd.nih.gov" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">here</a>.</p>
+                
+                <div class="space-y-4 text-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6">Introduction</h3>
+                    <p>The advent of machine learning (ML) in medicine has opened opportunities for harnessing its power to predict patient outcomes based on data in electronic medical records (EMRs). While singular features may be weak learners, combining them in an ML framework can create highly predictive models of health outcomes.</p>
+                    <p>The information-rich nuMoM2b dataset allows us to tackle two important hypotheses:</p>
+                    <ol class="list-decimal list-inside space-y-2 pl-4">
+                        <li>Demographic and socioeconomic characteristics influence rehospitalization outcomes.</li>
+                        <li>Demographic, socioeconomic, and psychiatric history influence postpartum depression outcomes.</li>
+                    </ol>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6">Methods</h3>
+                    <p>We used R Studio to create a reproducible coding notebook that ingests the nuMoM2b dataset. The software is optimized to run on standard desktop computers, requiring no special computing resources to encourage wide utilization. All steps can be easily reproduced, and the models can be updated as new data become available.</p>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6">Results</h3>
+                    <p>View the results by opening the following HTML files:</p>
+                    <ol class="list-decimal list-inside space-y-2 pl-4">
+                        <li><a href="maternal_nu_data.nb.html" class="text-blue-600 hover:underline">Hypothesis 1 Results</a></li>
+                        <li><a href="maternal_depression_data.nb.html" class="text-blue-600 hover:underline">Hypothesis 2 Results</a></li>
+                    </ol>
+                    
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6">Credit & References</h3>
+                    <p>Credit for the decision tree visualization code goes to <a href="http://rstudio-pubs-static.s3.amazonaws.com/463653_b50579f05ae246a9bfa4251ef9aae26b.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Gregory Kanevsky</a>.</p>
+                </div>
+            </section>
+
+            <!-- Updated HRV Pipeline Section -->
+            <section id="hrv-pipeline" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-900 border-b pb-3 mb-4">Updated HRV Pipeline</h2>
+                <p>
+                    <a href="https://martinfrasch.github.io/MethodsX%20R1%20HRV%20pipeline%20v4.1.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Supplementary data</a> for the MethodsX manuscript “Comprehensive HRV estimation pipeline in Python using Neurokit2” by M.G. Frasch.
+                </p>
+            </section>
+            
+            <!-- ChatGPT Demo Section -->
+            <section id="chatgpt-demo" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-900 border-b pb-3 mb-4">ChatGPT Demo for ML Code Generation</h2>
+                <p>
+                    <a href="https://martinfrasch.github.io/sample%20ChatGPT%20conversation%20to%20build%20ML%20models%20in%20Python%20and%20R.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">View a sample conversation</a> demonstrating how to use ChatGPT to generate machine learning models in Python and R/H2O.
+                </p>
+            </section>
+
+        </main>
     </div>
-  </div>
-  <div class="stackedit__right">
-    <div class="stackedit__html">
-      <h1 id="fraschlab-github-pages">FraschLab Github pages</h1>
-<p>Lab <a href="https://fraschlab.org">website</a></p>
-<h1 id="vagus-hrv-code">Vagus HRV code</h1>
-<p><a href="https://github.com/martinfrasch/vagus_HRV_code">Supplementary data</a> for the manuscript “Decoding vagal contributions to fetal heart rate variability” by C.L. Herry et al.</p>
-<h1 id="batch-computation-of-hrv-metrics-using-neurokit-api">Batch computation of HRV metrics using NeuroKit API</h1>
-<p><a href="https://github.com/martinfrasch/NeuroKit/blob/master/HRV_batch_mode_v3.1_GitHub%20_FINAL.ipynb">Navigate</a> to the Jupyter notebook</p>
-<h1 id="predicting-maternal-morbidity-considering-the-impact-of-ethnicity-and-socioeconomic-status-focus-on-rehospitalization-and-postpartum-depression.">Predicting maternal morbidity considering the impact of ethnicity and socioeconomic status: focus on rehospitalization and postpartum depression.</h1>
-<p>You can obtain the <strong>nuMoM2b</strong> dataset <a href="https://dash.nichd.nih.gov">here</a>.</p>
-<p><strong>Introduction</strong></p>
-<p>The advent of machine learning (ML) in medicine has opened opportunities for harnessing the power of ML to predict patient outcomes based on various data contained in the electronic medical records (EMRs) such as patient’s demographics, basic health and physiological characteristics.(Rajkomar et al. 2018; Lin et al. 2020) The exciting opportunity for health research is that taken by themselves such singular features do not tell a clearly predictive story, but combined in a ML modeling framework such so-called “weak learners” have the power to amount to highly predictive models of health outcomes.</p>
-<p>nuMoM2b is an information-rich dataset that allowed me to tackle two important aspects of the maternal health outcomes:</p>
-<ol>
-<li>Hypothesis 1: Demographic and socioeconomic characteristics influence the outcomes of being readmitted to the hospital (rehospitalization).</li>
-<li>Hypothesis 2: Demographic and socioeconomic characteristics along with psychiatric history influence the outcome of experiencing postpartum depression.</li>
-</ol>
-<p><strong>Methods</strong></p>
-<p>I set up a coding notebook environment in R Studio, a freely available open source environment, that efficiently ingests the nuMoM2b dataset as the input. The choice of software is optimized to run on regular desktop computers, thus requiring no special computing resources. This should help with wide utilization of the presented data science approach to this dataset to test other hypotheses.</p>
-<p>All steps in the notebook can be easily reproduced, step by step, on the existing data or the ML models can be updated/retrained as the new data come in.<br>
-I summarize the key findings in the notebook as they are generated and in the manuscript (arXiv TBA).</p>
-<p>I hope this approach will empower other researchers, even with limited or no data science background, to reproduce and enhance the presented results and approaches and generate further insights into which factors modify the maternal morbidity.</p>
-<p><strong>Results</strong></p>
-<p>The easiest way to view the results is by opening open the following HTML files:</p>
-<ol>
-<li><a href="maternal_nu_data.nb.html">Hypothesis 1</a></li>
-<li><a href="maternal_depression_data.nb.html">Hypothesis 2</a></li>
-</ol>
-<p>I supplied the salient output graphics as PNG or PDF files along with the underlying code as Rmd files. Those can be executed in R to validate and develop this further.</p>
-<p><strong>References</strong><br>
-Lin, Wei-Chun, Jimmy S. Chen, Michael F. Chiang, and Michelle R. Hribar. 2020. “Applications of Artificial Intelligence to Electronic Health Record Data in Ophthalmology.” Translational Vision Science &amp; Technology 9 (2): 13.<br>
-Rajkomar, Alvin, Eyal Oren, Kai Chen, Andrew M. Dai, Nissan Hajaj, Michaela Hardt, Peter J. Liu, et al. 2018. “Scalable and Accurate Deep Learning with Electronic Health Records.” NPJ Digital Medicine 1 (May): 18.</p>
-<p><strong>Credit</strong> for the  for <em>decision tree viz code</em> goes to <a href="http://rstudio-pubs-static.s3.amazonaws.com/463653_b50579f05ae246a9bfa4251ef9aae26b.html">Gregory Kanevsky</a></p>
-<h1 id="MethodsX%20R1%20HRV%20pipeline%20v4.1.html">Updated HRV pipeline</h1>
-<p><a href="https://martinfrasch.github.io/MethodsX%20R1%20HRV%20pipeline%20v4.1.html">Supplementary data</a> for the MethodsX manuscript “Comprehensive HRV estimation pipeline in Python using Neurokit2” by M.G. Frasch</p>
-    
-<h1 id="sample%20ChatGPT%20conversation%20to%20build%20ML%20models%20in%20Python%20and%20R.html">ChatGPT demo</h1>
-<p><a href="https://martinfrasch.github.io/sample%20ChatGPT%20conversation%20to%20build%20ML%20models%20in%20Python%20and%20R.html">ChatGPT demo to generate ML models in Python and R/h2o</p>    
-    </div>
-  </div>
+
 </body>
-
 </html>
